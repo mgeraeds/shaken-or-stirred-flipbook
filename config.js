@@ -12,10 +12,10 @@ export const CONFIG = {
   // Bestandsnaam die de bezoeker krijgt bij 'PDF' (download).
   downloadName: 'proefschrift-web.pdf',
 
-  title: 'Titel van het proefschrift',
-  subtitle: '',
-  author: 'Voornaam Achternaam',
-  institution: 'Erasmus Universiteit Rotterdam',
+  title: 'Shaken or stirred?',
+  subtitle: 'Elucidating salt intrusion dynamics in the Rhine-Meuse Delta using data-intensive unstructured modelling',
+  author: 'M.E.G. Geraeds',
+  institution: 'Delft University of Technology',
 
   /* ── Uiterlijk en gedrag ─────────────────────────────────────────────── */
 
