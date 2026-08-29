@@ -1,0 +1,14 @@
+# Regeleindes normaliseren voor tekstbestanden.
+* text=auto eol=lf
+
+# ── Git LFS ───────────────────────────────────────────────────────────────
+# Zet de regel hieronder AAN (haal de # weg) als je PDF groter is dan
+# ongeveer 50 MB. Doe dat vóór de eerste commit van de PDF; achteraf
+# overzetten vereist het herschrijven van de geschiedenis.
+#
+# Let op: GitHub Pages serveert LFS-bestanden NIET rechtstreeks. De
+# workflow in .github/workflows/deploy.yml lost dat op door de bestanden
+# tijdens de build op te halen. Publiceer dus via Actions, niet via de
+# instelling "Deploy from a branch".
+#
+# *.pdf filter=lfs diff=lfs merge=lfs -text

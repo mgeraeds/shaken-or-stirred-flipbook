@@ -1,0 +1,76 @@
+name: Publiceer flipbook op GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:      # knop 'Run workflow' in het tabblad Actions
+
+# Pages heeft deze drie rechten nodig. id-token is voor de vertrouwde
+# koppeling tussen de workflow en de Pages-omgeving (OIDC).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nooit twee publicaties tegelijk; wel de laatste altijd afmaken.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository ophalen
+        uses: actions/checkout@v4
+        with:
+          # Cruciaal wanneer je de PDF via Git LFS opslaat: zonder dit
+          # staat er straks een pointerbestand van 130 bytes op de site.
+          lfs: true
+
+      - name: LFS-inhoud binnenhalen
+        run: git lfs pull || true
+
+      - name: Controleer de PDF
+        run: |
+          pdf=$(node -e "
+            const s=require('fs').readFileSync('assets/js/config.js','utf8');
+            const m=s.match(/pdfUrl:\s*'([^']+)'/);
+            process.stdout.write(m ? m[1] : '');
+          ")
+          if [[ "$pdf" == http* ]]; then
+            echo "PDF wordt extern gehost ($pdf) — overslaan."
+            exit 0
+          fi
+          if [[ ! -f "$pdf" ]]; then
+            echo "::error::$pdf ontbreekt. Commit je proefschrift of zet een externe URL in assets/js/config.js."
+            exit 1
+          fi
+          if head -c 60 "$pdf" | grep -q "git-lfs.github.com"; then
+            echo "::error::$pdf is nog een LFS-pointer. Draai 'git lfs pull' en controleer .gitattributes."
+            exit 1
+          fi
+          size=$(stat -c%s "$pdf")
+          echo "PDF gevonden: $pdf ($((size / 1024 / 1024)) MB)"
+          if (( size > 100 * 1024 * 1024 )); then
+            echo "::warning::Groter dan 100 MB. Overweeg te comprimeren; zie de README."
+          fi
+
+      - name: Pages voorbereiden
+        uses: actions/configure-pages@v5
+
+      - name: Site inpakken
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .          # statische site: de repo is de site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publiceren
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- Pas deze vier regels aan; de rest komt uit assets/js/config.js -->
+<title>Proefschrift — Flipbook</title>
+<meta name="description" content="Blader online door het proefschrift.">
+<meta property="og:title" content="Proefschrift — Flipbook">
+<meta property="og:description" content="Blader online door het proefschrift.">
+<meta property="og:type" content="book">
+<meta property="og:image" content="assets/cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#16233A">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/flipbook.css">
+</head>
+
+<body>
+<a class="skip" href="#book">Naar het boek</a>
+
+<div class="app" id="app">
+
+  <!-- ── Kop ─────────────────────────────────────────────────────────── -->
+  <header class="bar bar--top">
+    <div class="ident">
+      <h1 class="ident__title" data-bind="title">Proefschrift</h1>
+      <p class="ident__meta"><span data-bind="author">Auteur</span> <span class="ident__sep">·</span> <span data-bind="institution">Universiteit</span></p>
+    </div>
+
+    <nav class="tools" aria-label="Weergave">
+      <button class="btn" id="btn-contents" aria-expanded="false" aria-controls="panel-contents" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h8"/></svg>
+        <span>Inhoud</span>
+      </button>
+      <button class="btn" id="btn-search" aria-expanded="false" aria-controls="panel-search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+        <span>Zoeken</span>
+      </button>
+      <button class="btn" id="btn-read" title="Vergroot de rechterpagina (toets: L)">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M6 8h4M8 6v4"/></svg>
+        <span>Vergroten</span>
+      </button>
+      <button class="btn" id="btn-full" title="Volledig scherm (toets: F)">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>
+        <span>Scherm</span>
+      </button>
+      <a class="btn btn--solid" id="btn-download" href="#" download>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"/></svg>
+        <span>PDF</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- ── Het boek ────────────────────────────────────────────────────── -->
+  <main class="stage" id="stage">
+    <div class="book" id="book">
+      <div id="flipbook" class="flipbook"></div>
+    </div>
+
+    <button class="nudge nudge--prev" id="btn-prev" aria-label="Vorige pagina">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8 10 13.5"/></svg>
+    </button>
+    <button class="nudge nudge--next" id="btn-next" aria-label="Volgende pagina">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5 11.5 8 6 13.5"/></svg>
+    </button>
+
+    <div class="boot" id="boot" role="status" aria-live="polite">
+      <div class="boot__mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="boot__text" id="boot-text">Proefschrift laden…</p>
+      <div class="boot__track"><div class="boot__fill" id="boot-fill"></div></div>
+    </div>
+  </main>
+
+  <!-- ── Snede: de navigatie is de voorsnede van het boekblok ────────── -->
+  <footer class="bar bar--bottom">
+    <div class="foredge" id="foredge"
+         role="slider" tabindex="0"
+         aria-label="Bladeren door het boekblok"
+         aria-valuemin="1" aria-valuemax="1" aria-valuenow="1" aria-valuetext="pagina 1">
+      <div class="foredge__block" aria-hidden="true"></div>
+      <div class="foredge__marks" id="foredge-marks" aria-hidden="true"></div>
+      <div class="foredge__ribbon" id="foredge-ribbon" aria-hidden="true"></div>
+      <div class="foredge__hint" id="foredge-hint" aria-hidden="true"></div>
+    </div>
+    <p class="folio" id="folio" aria-live="polite" aria-atomic="true">
+      <span id="folio-now">–</span><span class="folio__of">/</span><span id="folio-total">–</span>
+    </p>
+  </footer>
+
+  <!-- ── Inhoudsopgave ───────────────────────────────────────────────── -->
+  <aside class="panel" id="panel-contents" hidden>
+    <div class="panel__head">
+      <h2>Inhoud</h2>
+      <button class="panel__close" data-close="panel-contents" aria-label="Inhoud sluiten">&times;</button>
+    </div>
+    <ol class="toc" id="toc"></ol>
+  </aside>
+
+  <!-- ── Zoeken ──────────────────────────────────────────────────────── -->
+  <aside class="panel" id="panel-search" hidden>
+    <div class="panel__head">
+      <h2>Zoeken</h2>
+      <button class="panel__close" data-close="panel-search" aria-label="Zoeken sluiten">&times;</button>
+    </div>
+    <div class="find">
+      <input class="find__input" id="find-input" type="search" placeholder="Zoek in de volledige tekst" autocomplete="off" spellcheck="false">
+      <p class="find__status" id="find-status" role="status" aria-live="polite">De tekst wordt bij de eerste zoekopdracht ingelezen.</p>
+    </div>
+    <ol class="hits" id="hits"></ol>
+  </aside>
+
+  <!-- ── Leesweergave (vergroot) ─────────────────────────────────────── -->
+  <div class="reader" id="reader" hidden>
+    <div class="reader__bar">
+      <span class="reader__folio" id="reader-folio">Pagina</span>
+      <button class="btn" id="reader-prev">Vorige</button>
+      <button class="btn" id="reader-next">Volgende</button>
+      <button class="btn btn--solid" id="reader-close">Sluiten</button>
+    </div>
+    <div class="reader__scroll" id="reader-scroll">
+      <canvas id="reader-canvas"></canvas>
+    </div>
+  </div>
+
+  <p class="fallback" id="fallback" hidden></p>
+</div>
+
+<script type="module" src="assets/js/flipbook.js"></script>
+</body>
+</html>

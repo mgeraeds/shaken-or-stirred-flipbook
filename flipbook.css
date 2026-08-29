@@ -1,0 +1,457 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Proefschrift-flipbook
+
+   Beeldtaal: een boek op een tafel in een leeszaal bij avond. Delfts
+   nachtblauw als achtergrond, papierwit voor de pagina's, en één accent —
+   messing, de kleur van de foliedruk op een proefschriftrug. Het accent
+   wordt uitsluitend gebruikt voor de plek waar je bent: het leeslint.
+
+   De navigatie is de voorsnede van het boekblok: elk streepje is papier.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --stage:        #16233A;
+  --stage-deep:   #101A2C;
+  --stage-lift:   #1E3050;
+  --paper:        #FBF9F4;
+  --paper-edge:   #D9D3C4;
+  --foil:         #C9A227;
+  --foil-lift:    #E6C864;
+  --chalk:        #E8EEF7;
+  --muted:        #93A7C4;
+  --line:         rgba(232, 238, 247, .13);
+  --line-strong:  rgba(232, 238, 247, .26);
+
+  --display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --sans:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --gap: clamp(12px, 2.2vw, 26px);
+  --radius: 3px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--stage-lift) 0%, var(--stage) 42%, var(--stage-deep) 100%);
+  color: var(--chalk);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font: inherit; color: inherit; }
+
+svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
+      stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+:focus-visible {
+  outline: 2px solid var(--foil-lift);
+  outline-offset: 2px;
+}
+
+.skip {
+  position: absolute; top: 8px; left: 8px; z-index: 100;
+  padding: 8px 14px; background: var(--foil); color: #1A1405;
+  border-radius: var(--radius); font-weight: 600; text-decoration: none;
+  transform: translateY(-160%);
+}
+.skip:focus { transform: none; }
+
+/* ── Raamwerk ─────────────────────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100svh;
+  padding: 0 var(--gap);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bar { display: flex; align-items: center; gap: var(--gap); }
+
+.bar--top {
+  justify-content: space-between;
+  padding: 14px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bar--bottom {
+  gap: 18px;
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* ── Titel ────────────────────────────────────────────────────────────── */
+
+.ident { min-width: 0; }
+
+.ident__title {
+  margin: 0;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-size: clamp(17px, 2.1vw, 23px);
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ident__meta {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: .02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ident__sep { opacity: .5; padding: 0 .25em; }
+
+/* ── Knoppen ──────────────────────────────────────────────────────────── */
+
+.tools { display: flex; gap: 6px; flex-shrink: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--chalk);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease;
+}
+.btn:hover { background: rgba(232, 238, 247, .07); border-color: var(--chalk); }
+.btn[aria-expanded='true'] { background: rgba(232, 238, 247, .1); border-color: var(--chalk); }
+
+.btn--solid {
+  background: var(--foil); border-color: var(--foil); color: #1A1405; font-weight: 600;
+}
+.btn--solid:hover { background: var(--foil-lift); border-color: var(--foil-lift); }
+
+@media (max-width: 700px) {
+  .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .btn { padding: 8px; }
+}
+
+/* ── Het boek ─────────────────────────────────────────────────────────── */
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.book {
+  position: relative;
+  max-width: 100%;
+  filter: drop-shadow(0 26px 40px rgba(6, 12, 24, .55));
+  opacity: 0;
+  transform: translateY(10px) scale(.985);
+  transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .3, 1);
+}
+.is-ready .book { opacity: 1; transform: none; }
+
+.page {
+  background: var(--paper);
+  overflow: hidden;
+}
+.page--cover { background: #F2EEE4; }
+
+/* De rug. StPageFlip zet zelf --left of --right op elke pagina, dus de
+   schaduw zit altijd aan de ingebonden kant en draait mee bij het omslaan. */
+.page::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.page.--right::after {
+  background: linear-gradient(90deg, rgba(28, 21, 8, .2) 0%, transparent 6%);
+}
+.page.--left::after {
+  background: linear-gradient(270deg, rgba(28, 21, 8, .2) 0%, transparent 6%);
+}
+
+.page__canvas { display: block; }
+
+/* Een niet-getekende pagina toont rustig papier, geen leeg gat. */
+.page:not(.page--drawn)::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+      180deg, transparent 0 22px, rgba(22, 35, 58, .045) 22px 23px);
+}
+
+/* ── Bladerknoppen naast het boek ─────────────────────────────────────── */
+
+.nudge {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 64px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .16s ease, border-color .16s ease;
+}
+.nudge:hover { color: var(--chalk); border-color: var(--line-strong); }
+.nudge svg { width: 18px; height: 18px; }
+.nudge--prev { left: 0; }
+.nudge--next { right: 0; }
+
+@media (max-width: 900px) { .nudge { display: none; } }
+
+/* ── Laadscherm ───────────────────────────────────────────────────────── */
+
+.boot {
+  position: absolute; inset: 0;
+  display: grid; place-content: center; justify-items: center; gap: 16px;
+  background: inherit;
+}
+
+/* Drie schuine strepen: de rug van een boek op een plank. */
+.boot__mark { display: flex; gap: 5px; height: 34px; }
+.boot__mark span {
+  width: 6px; background: var(--foil); opacity: .3;
+  transform: skewX(-9deg);
+  animation: shelf 1.15s ease-in-out infinite;
+}
+.boot__mark span:nth-child(2) { animation-delay: .13s; }
+.boot__mark span:nth-child(3) { animation-delay: .26s; }
+@keyframes shelf {
+  0%, 100% { opacity: .22; transform: skewX(-9deg) scaleY(.78); }
+  50%      { opacity: .95; transform: skewX(-9deg) scaleY(1); }
+}
+
+.boot__text { margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.boot__track { width: 190px; height: 2px; background: var(--line); }
+.boot__fill { height: 100%; width: 0; background: var(--foil); transition: width .2s ease; }
+
+/* ── De voorsnede ─────────────────────────────────────────────────────── */
+
+.foredge {
+  position: relative;
+  flex: 1;
+  height: 42px;
+  cursor: ew-resize;
+  touch-action: none;
+  border-radius: 1px;
+}
+
+/* Het boekblok: honderden vellen papier van opzij gezien. */
+.foredge__block {
+  position: absolute; inset: 0;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(120, 108, 84, .34) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg,
+      rgba(22, 35, 58, .16) 0%, transparent 14%,
+      transparent 86%, rgba(22, 35, 58, .16) 100%);
+  box-shadow: inset 0 0 0 1px var(--paper-edge);
+}
+
+.foredge__marks { position: absolute; inset: 0; }
+
+/* Een hoofdstuk is een duimgreep in de snede. */
+.foredge__mark {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: rgba(22, 35, 58, .5);
+  transform: translateX(-1px);
+}
+
+/* Het leeslint. */
+.foredge__ribbon {
+  position: absolute; top: -5px; bottom: -5px; width: 4px;
+  margin-left: -2px;
+  background: linear-gradient(180deg, var(--foil-lift), var(--foil));
+  box-shadow: 0 0 0 1px rgba(20, 16, 8, .35), 0 2px 6px rgba(0, 0, 0, .4);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  transition: left .28s cubic-bezier(.2, .8, .3, 1);
+  pointer-events: none;
+}
+.foredge.is-dragging .foredge__ribbon { transition: none; }
+
+.foredge__hint {
+  position: absolute; bottom: calc(100% + 9px);
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  background: var(--chalk); color: var(--stage-deep);
+  border-radius: var(--radius);
+  font-family: var(--mono); font-size: 12px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .12s ease;
+}
+.foredge.is-dragging .foredge__hint { opacity: 1; }
+
+/* ── Paginateller ─────────────────────────────────────────────────────── */
+
+.folio {
+  margin: 0;
+  min-width: 8.5ch;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: var(--chalk);
+  font-variant-numeric: tabular-nums;
+}
+.folio__of { color: var(--muted); padding: 0 .4em; }
+#folio-total { color: var(--muted); }
+
+/* ── Zijpanelen ───────────────────────────────────────────────────────── */
+
+.panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  z-index: 40;
+  width: min(400px, 92vw);
+  display: flex; flex-direction: column;
+  background: var(--stage-deep);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: -22px 0 50px rgba(4, 8, 16, .5);
+  animation: slide .22s ease;
+}
+@keyframes slide { from { transform: translateX(14px); opacity: 0; } }
+
+.panel[hidden] { display: none; }
+
+.panel__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.panel__head h2 {
+  margin: 0; font-family: var(--display); font-weight: 600; font-size: 18px;
+}
+.panel__close {
+  background: none; border: 0; color: var(--muted);
+  font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.panel__close:hover { color: var(--chalk); }
+
+/* ── Inhoudsopgave ────────────────────────────────────────────────────── */
+
+.toc { margin: 0; padding: 8px 0 24px; list-style: none; overflow-y: auto; }
+
+.toc__link {
+  display: flex; gap: 14px; align-items: baseline; width: 100%;
+  padding: 9px 20px;
+  background: none; border: 0; text-align: left; cursor: pointer;
+}
+.toc__link:hover { background: rgba(232, 238, 247, .06); }
+
+.toc__label { flex: 1; }
+.toc__page {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.toc__item--d1 .toc__label { padding-left: 18px; color: var(--muted); font-size: 14px; }
+
+/* ── Zoeken ───────────────────────────────────────────────────────────── */
+
+.find { padding: 16px 20px 12px; }
+
+.find__input {
+  width: 100%; padding: 10px 12px;
+  background: rgba(232, 238, 247, .06);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--chalk);
+}
+.find__input::placeholder { color: var(--muted); }
+
+.find__status {
+  margin: 10px 0 0; font-size: 12.5px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hits { margin: 0; padding: 0 0 24px; list-style: none; overflow-y: auto; }
+
+.hit {
+  display: flex; gap: 12px; width: 100%;
+  padding: 11px 20px;
+  background: none; border: 0; border-top: 1px solid var(--line);
+  text-align: left; cursor: pointer;
+}
+.hit:hover { background: rgba(232, 238, 247, .06); }
+
+.hit__page {
+  flex-shrink: 0; width: 3.5ch;
+  font-family: var(--mono); font-size: 12px; color: var(--foil);
+  font-variant-numeric: tabular-nums;
+}
+.hit__text { font-size: 13px; line-height: 1.45; color: var(--muted); }
+.hit__match { background: rgba(201, 162, 39, .28); color: var(--chalk); border-radius: 2px; }
+
+/* ── Leesweergave ─────────────────────────────────────────────────────── */
+
+.reader {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  background: var(--stage-deep);
+}
+.reader[hidden] { display: none; }
+
+.reader__bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px var(--gap);
+  border-bottom: 1px solid var(--line);
+}
+.reader__folio {
+  flex: 1; font-family: var(--mono); font-size: 13px; color: var(--muted);
+}
+
+.reader__scroll { flex: 1; overflow: auto; padding: 16px; text-align: center; }
+.reader__scroll canvas {
+  max-width: none; background: var(--paper);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+
+.fallback {
+  position: absolute; inset: auto 0 50% 0;
+  text-align: center; color: var(--muted);
+}
+.fallback a { color: var(--foil-lift); }
+
+/* ── Rustiger bij voorkeur voor minder beweging ───────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+  .book { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   StPageFlip basisstijl (MIT, Nodlik) — hier ingesloten zodat de repo
+   niet van een extra CSS-bestand afhankelijk is.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stf__parent {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  transform: translateZ(0);
+  touch-action: pan-y;
+}
+.stf__wrapper, .sft__wrapper { position: relative; width: 100%; box-sizing: border-box; }
+.stf__parent canvas { position: absolute; width: 100%; height: 100%; left: 0; top: 0; }
+.stf__block { position: absolute; width: 100%; height: 100%; box-sizing: border-box; perspective: 2000px; }
+.stf__item { display: none; position: absolute; transform-style: preserve-3d; }
+.stf__outerShadow, .stf__innerShadow,
+.stf__hardShadow, .stf__hardInnerShadow { position: absolute; left: 0; top: 0; }
