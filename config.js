@@ -7,10 +7,10 @@ export const CONFIG = {
 
   // Pad naar de PDF. Relatief (in deze repo) of een volledige https-URL.
   // Let op bij een externe URL: die server moet CORS toestaan. Zie README.
-  pdfUrl: 'pdf/proefschrift.pdf',
+  pdfUrl: 'pdf/proefschrift-web.pdf',
 
   // Bestandsnaam die de bezoeker krijgt bij 'PDF' (download).
-  downloadName: 'proefschrift.pdf',
+  downloadName: 'proefschrift-web.pdf',
 
   title: 'Titel van het proefschrift',
   subtitle: '',

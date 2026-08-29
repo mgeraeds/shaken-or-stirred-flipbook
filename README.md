@@ -16,7 +16,7 @@ Geen build-stap, geen framework, geen server: HTML, CSS en één JavaScript-modu
 
 1. Klik op **Use this template** → **Create a new repository**
    (of maak een lege repo en kopieer deze bestanden erin).
-2. Zet je PDF in `pdf/` als `proefschrift.pdf`.
+2. Zet je PDF in `pdf/` als `proefschrift-web.pdf`.
 3. Pas `assets/js/config.js` aan: titel, auteur, instelling, bestandsnaam.
 4. Pas in `index.html` de vier regels boven `<!-- Pas deze vier regels aan -->`
    aan — dat zijn de titel en de deelvoorvertoning voor LinkedIn en Bluesky.
@@ -85,7 +85,7 @@ git lfs install
 # haal de laatste regel in .gitattributes uit commentaar, dus:
 #   *.pdf filter=lfs diff=lfs merge=lfs -text
 git add .gitattributes
-git add pdf/proefschrift.pdf
+git add pdf/proefschrift-web.pdf
 git commit -m "Proefschrift toevoegen via LFS"
 git push
 ```
@@ -107,7 +107,7 @@ figuren. Ghostscript lost dat op:
 ```bash
 # 300 dpi — veilig voor een proefschrift met figuren en formules
 gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -dPDFSETTINGS=/printer \
-   -dNOPAUSE -dQUIET -dBATCH -sOutputFile=proefschrift-web.pdf proefschrift.pdf
+   -dNOPAUSE -dQUIET -dBATCH -sOutputFile=proefschrift-compressed.pdf proefschrift.pdf
 ```
 
 Gebruik `/ebook` (150 dpi) alleen als je figuren dat verdragen — controleer
@@ -116,7 +116,7 @@ altijd een grafiek en een foto voordat je het resultaat publiceert.
 Daarna één stap die veel scheelt bij het openen:
 
 ```bash
-qpdf --linearize proefschrift-web.pdf proefschrift.pdf
+qpdf --linearize proefschrift-compressed.pdf pdf/proefschrift-web.pdf
 ```
 
 Een gelineariseerde PDF ("fast web view") zet de eerste pagina vooraan in het
@@ -193,7 +193,7 @@ meegeleverd: die haalt beide bibliotheken de repo in.
 ### Een voorvertoning voor sociale media
 
 ```bash
-pdftoppm -png -r 100 -f 1 -l 1 -singlefile pdf/proefschrift.pdf assets/cover
+pdftoppm -png -r 100 -f 1 -l 1 -singlefile pdf/proefschrift-web.pdf assets/cover
 ```
 
 Dat maakt `assets/cover.png` uit de eerste pagina — precies het bestand waar de
