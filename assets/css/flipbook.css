@@ -221,6 +221,9 @@ svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
   display: grid; place-content: center; justify-items: center; gap: 16px;
   background: inherit;
 }
+.boot[hidden] {
+  display: none;
+}
 
 /* Drie schuine strepen: de rug van een boek op een plank. */
 .boot__mark { display: flex; gap: 5px; height: 34px; }
