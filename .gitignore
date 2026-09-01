@@ -1,0 +1,4 @@
+# De PDF wordt bij elke publicatie opgehaald via pdfSourceUrl in
+# assets/js/config.js (zie .github/workflows/deploy.yml), dus hij hoeft
+# niet in git. Blijft lokaal staan voor `python3 -m http.server`.
+pdf/*.pdf
