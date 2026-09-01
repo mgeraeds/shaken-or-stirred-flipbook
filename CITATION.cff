@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Shaken or stirred? Elucidating salt intrusion dynamics in the Rhine-Meuse Delta using data-intensive unstructured modelling"
+message: "Please use this citation for referencing the publication underlying the flipbook in this repository."
+type: thesis
+authors:
+  - family-names: Geraeds
+    given-names: Marlein
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+year: 2026
+institution:
+  name: Delft University of Technology
+url: "https://repository.tudelft.nl/record/uuid:d0e73249-0e73-4259-ac5d-3c7e4dd02124"
