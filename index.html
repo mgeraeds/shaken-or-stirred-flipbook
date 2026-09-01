@@ -128,6 +128,19 @@
   </div>
 
   <p class="fallback" id="fallback" hidden></p>
+
+  <!-- ── Waarschuwing (repository-voorblad, buiten de flipbook) ───────── -->
+  <div class="warning" id="warning" hidden role="dialog" aria-modal="true" aria-labelledby="warning-title">
+    <div class="warning__panel" id="warning-panel">
+      <div class="warning__head">
+        <h2 id="warning-title">Voorblad</h2>
+        <button class="warning__close" id="warning-close" aria-label="Waarschuwing sluiten">&times;</button>
+      </div>
+      <div class="warning__scroll">
+        <canvas id="warning-canvas"></canvas>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="assets/js/flipbook.js"></script>

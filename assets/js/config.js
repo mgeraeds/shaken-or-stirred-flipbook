@@ -5,9 +5,19 @@
 export const CONFIG = {
   /* ── Jouw proefschrift ───────────────────────────────────────────────── */
 
-  // Pad naar de PDF. Relatief (in deze repo) of een volledige https-URL.
-  // Let op bij een externe URL: die server moet CORS toestaan. Zie README.
+  // Pad naar de PDF zoals de site 'm serveert. Laat dit een lokaal, relatief
+  // pad zijn (dus geen https-URL) als je pdfSourceUrl hieronder gebruikt —
+  // de build haalt het bestand dan naar dit pad toe.
   pdfUrl: 'pdf/proefschrift-web.pdf',
+
+  // Optioneel: haal de PDF bij elke publicatie op van een externe bron
+  // (bijv. een universitair repository) in plaats van 'm in git te zetten.
+  // De GitHub Actions-workflow downloadt 'm dan naar pdfUrl vóór het
+  // publiceren — zo blijft de PDF buiten je git-geschiedenis, en werkt de
+  // flipbook alsnog same-origin (geen CORS nodig, want de bron-server hoeft
+  // dan zelf geen CORS-header te sturen). Zet op '' om uit te schakelen en
+  // pdfUrl direct te gebruiken (lokaal bestand, of externe URL mét CORS).
+  pdfSourceUrl: 'https://repository.tudelft.nl/file/File_e52e86ad-3e3c-4916-bad5-c9dbdcd22f0a',
 
   // Bestandsnaam die de bezoeker krijgt bij 'PDF' (download).
   downloadName: 'proefschrift-web.pdf',
@@ -22,6 +32,26 @@ export const CONFIG = {
   // Toon de eerste en laatste pagina als losse, stijve kaft.
   // Zet op false als je PDF al met een dubbele titelpagina begint.
   hardCover: true,
+
+  // PDF-paginanummer (1-based) dat NIET in de flipbook komt, maar in plaats
+  // daarvan bij het openen als wegklikbare waarschuwing getoond wordt —
+  // handig voor een repository-voorblad dat niet bij het boek zelf hoort.
+  // Zet op null om uit te schakelen; dan komt ook pagina 1 gewoon in het boek.
+  warningPage: 1,
+
+  // Extra PDF's die je ergens tussen de proefschrift-pagina's wilt schuiven
+  // (bijv. een schutblad, erratum of los voorwoord dat geen deel is van
+  // pdfUrl zelf). Elk bestand wordt volledig ingevoegd, in eigen
+  // paginavolgorde, vanaf positie 'at':
+  //   - positief telt vanaf het begin (1 = wordt de nieuwe eerste pagina);
+  //   - negatief telt vanaf het eind (-1 = na de huidige laatste pagina,
+  //     -2 = vóór de huidige laatste pagina, enz.).
+  // Bestanden zijn lokale paden of https-URL's — zelfde CORS-regel als
+  // pdfUrl. Laat leeg ([]) als je dit niet gebruikt.
+  inserts: [
+    // { at: 2, url: 'pdf/cover-binnenkant-voor.pdf' },
+    // { at: -2, url: 'pdf/cover-binnenkant-achter.pdf' },
+  ],
 
   // Duur van de omslaganimatie in milliseconden.
   flipDuration: 750,

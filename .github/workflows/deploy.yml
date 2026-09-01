@@ -31,6 +31,30 @@ jobs:
       - name: LFS-inhoud binnenhalen
         run: git lfs pull || true
 
+      - name: PDF ophalen van externe bron
+        run: |
+          src=$(node -e "
+            const s=require('fs').readFileSync('assets/js/config.js','utf8');
+            const m=s.match(/pdfSourceUrl:\s*'([^']*)'/);
+            process.stdout.write(m ? m[1] : '');
+          ")
+          if [[ -z "$src" ]]; then
+            echo "Geen pdfSourceUrl ingesteld — overslaan."
+            exit 0
+          fi
+          dest=$(node -e "
+            const s=require('fs').readFileSync('assets/js/config.js','utf8');
+            const m=s.match(/pdfUrl:\s*'([^']+)'/);
+            process.stdout.write(m ? m[1] : '');
+          ")
+          if [[ "$dest" == http* ]]; then
+            echo "::error::pdfSourceUrl is ingesteld, maar pdfUrl is zelf ook een externe URL. Zet pdfUrl op een lokaal pad (bijv. pdf/proefschrift-web.pdf) — daar wordt de PDF dan naartoe gedownload."
+            exit 1
+          fi
+          mkdir -p "$(dirname "$dest")"
+          echo "PDF ophalen van $src naar $dest…"
+          curl -fL --retry 3 --retry-delay 5 -o "$dest" "$src"
+
       - name: Controleer de PDF
         run: |
           pdf=$(node -e "
@@ -43,7 +67,7 @@ jobs:
             exit 0
           fi
           if [[ ! -f "$pdf" ]]; then
-            echo "::error::$pdf ontbreekt. Commit je proefschrift of zet een externe URL in assets/js/config.js."
+            echo "::error::$pdf ontbreekt. Commit je proefschrift, zet pdfSourceUrl in assets/js/config.js, of zet een externe URL (mét CORS) in pdfUrl."
             exit 1
           fi
           if head -c 60 "$pdf" | grep -q "git-lfs.github.com"; then

@@ -1,4 +1,8 @@
-# De PDF wordt bij elke publicatie opgehaald via pdfSourceUrl in
-# assets/js/config.js (zie .github/workflows/deploy.yml), dus hij hoeft
+# Het proefschrift zelf wordt bij elke publicatie opgehaald via pdfSourceUrl
+# in assets/js/config.js (zie .github/workflows/deploy.yml), dus die hoeft
 # niet in git. Blijft lokaal staan voor `python3 -m http.server`.
-pdf/*.pdf
+#
+# Let op: bestanden die je via CONFIG.inserts toevoegt (schutbladen e.d.)
+# worden NIET tijdens de build opgehaald — die moet je wél gewoon committen,
+# anders ontbreken ze op de gepubliceerde site. Zet ze dus niet hieronder.
+pdf/proefschrift-web.pdf

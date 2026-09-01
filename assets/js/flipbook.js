@@ -49,6 +49,15 @@ class Flipbook {
     this.outline = [];
     this.textIndex = null;
     this.indexing = false;
+    // Aantal PDF-pagina's vooraan dat NIET in de flipbook zit (zie
+    // CONFIG.warningPage).
+    this.pageOffset = 0;
+    // Eén item per flipbook-pagina: { doc, page }. doc is een geladen
+    // pdf.js-document (het proefschrift zelf, of een ingevoegd bestand uit
+    // CONFIG.inserts), page is het paginanummer (1-based) daarbinnen. Zo
+    // hoeft de rest van de code nooit te weten uit welk bestand een
+    // flipbook-pagina komt.
+    this.pageMap = [];
 
     this.el = {
       stage: $('stage'), book: $('book'), flipbook: $('flipbook'),
@@ -61,6 +70,8 @@ class Flipbook {
       reader: $('reader'), readerCanvas: $('reader-canvas'),
       readerFolio: $('reader-folio'), readerScroll: $('reader-scroll'),
       fallback: $('fallback'),
+      warning: $('warning'), warningPanel: $('warning-panel'),
+      warningCanvas: $('warning-canvas'), warningClose: $('warning-close'),
     };
   }
 
@@ -85,9 +96,16 @@ class Flipbook {
     };
 
     this.pdf = await task.promise;
-    this.total = this.pdf.numPages;
 
-    const first = await this.pdf.getPage(1);
+    this.pageOffset = (CONFIG.warningPage && CONFIG.warningPage >= 1)
+      ? CONFIG.warningPage
+      : 0;
+
+    const inserts = await this.loadInserts();
+    this.pageMap = this.buildPageMap(inserts);
+    this.total = this.pageMap.length;
+
+    const first = await this.getPageFor(1);
     const view = first.getViewport({ scale: 1 });
     this.aspect = view.width / view.height;
 
@@ -106,6 +124,7 @@ class Flipbook {
     document.body.classList.add('is-ready');
 
     this.loadOutline();       // op de achtergrond
+    if (this.pageOffset > 0) this.showWarning();   // ook op de achtergrond
   }
 
   applyMetadata() {
@@ -123,6 +142,52 @@ class Flipbook {
     const dl = $('btn-download');
     dl.href = CONFIG.pdfUrl;
     dl.setAttribute('download', CONFIG.downloadName);
+  }
+
+  /* ── Ingevoegde PDF's (CONFIG.inserts) ────────────────────────────────── */
+
+  /** Laadt elk bestand uit CONFIG.inserts als los pdf.js-document. */
+  async loadInserts() {
+    const inserts = [];
+    for (const insert of CONFIG.inserts || []) {
+      const task = this.pdfjsLib.getDocument({
+        url: absolute(insert.url),
+        cMapUrl: absolute(CONFIG.pdfjs.cmaps),
+        cMapPacked: true,
+        standardFontDataUrl: absolute(CONFIG.pdfjs.fonts),
+        wasmUrl: absolute(CONFIG.pdfjs.wasm),
+      });
+      const doc = await task.promise;
+      inserts.push({ at: insert.at, doc });
+    }
+    return inserts;
+  }
+
+  /** Bouwt de flipbook-paginavolgorde: eerst het proefschrift (met de
+   *  waarschuwingspagina eraf), daarna elk insert op zijn 'at'-positie. */
+  buildPageMap(inserts) {
+    const map = [];
+    for (let p = 1 + this.pageOffset; p <= this.pdf.numPages; p++) {
+      map.push({ doc: this.pdf, page: p });
+    }
+
+    for (const { at, doc } of inserts) {
+      const entries = [];
+      for (let p = 1; p <= doc.numPages; p++) entries.push({ doc, page: p });
+
+      const index = at >= 0
+        ? clamp(at - 1, 0, map.length)
+        : clamp(map.length + at + 1, 0, map.length);
+      map.splice(index, 0, ...entries);
+    }
+
+    return map;
+  }
+
+  /** Haalt de pdf.js-pagina op die bij flipbook-paginanummer n hoort. */
+  getPageFor(n) {
+    const entry = this.pageMap[n - 1];
+    return entry.doc.getPage(entry.page);
   }
 
   /* ── Pagina-elementen ───────────────────────────────────────────────── */
@@ -272,7 +337,7 @@ class Flipbook {
     const job = (async () => {
       const el = this.pageEls[n - 1];
       const canvas = el.querySelector('canvas');
-      const page = await this.pdf.getPage(n);
+      const page = await this.getPageFor(n);
 
       // Renderen op de werkelijke schermdichtheid, maar niet onbeperkt:
       // 2× is scherp genoeg en scheelt veel geheugen op telefoons.
@@ -359,10 +424,15 @@ class Flipbook {
         const dest = typeof item.dest === 'string'
           ? await this.pdf.getDestination(item.dest)
           : item.dest;
-        item.page = (await this.pdf.getPageIndex(dest[0])) + 1;
+        // PDF-paginanummer terugzoeken naar de bijbehorende flipbook-positie.
+        const pdfPage = (await this.pdf.getPageIndex(dest[0])) + 1;
+        const flip = this.pageMap.findIndex((e) => e.doc === this.pdf && e.page === pdfPage);
+        item.page = flip === -1 ? null : flip + 1;
       } catch { item.page = null; }
     }
 
+    // Bladwijzers die naar de waarschuwingspagina zelf wijzen, vallen buiten
+    // het boek en horen dus niet in de inhoudsopgave.
     this.outline = flat.filter((i) => i.page);
     if (!this.outline.length) return;
 
@@ -404,7 +474,7 @@ class Flipbook {
     const index = [];
     for (let n = 1; n <= this.total; n++) {
       try {
-        const page = await this.pdf.getPage(n);
+        const page = await this.getPageFor(n);
         const text = await page.getTextContent();
         index.push(text.items.map((i) => i.str).join(' ').replace(/\s+/g, ' '));
         page.cleanup();
@@ -485,7 +555,7 @@ class Flipbook {
     this.el.readerFolio.textContent = `Pagina ${n}`;
     this.readerPage = n;
 
-    const page = await this.pdf.getPage(n);
+    const page = await this.getPageFor(n);
     const width = this.el.readerScroll.clientWidth - 32;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const unit = page.getViewport({ scale: 1 });
@@ -498,6 +568,34 @@ class Flipbook {
     const ctx = canvas.getContext('2d', { alpha: false });
     await page.render({ canvas, canvasContext: ctx, viewport }).promise;
     page.cleanup();
+  }
+
+  /* ── Waarschuwingspagina (buiten de flipbook) ─────────────────────────── */
+
+  async showWarning() {
+    try {
+      const page = await this.pdf.getPage(CONFIG.warningPage);
+      const canvas = this.el.warningCanvas;
+      const width = Math.min(this.el.warningPanel.clientWidth || 480, 640);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const unit = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({ scale: (width * dpr) / unit.width });
+
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      canvas.style.width = Math.floor(viewport.width / dpr) + 'px';
+      const ctx = canvas.getContext('2d', { alpha: false });
+      await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+      page.cleanup();
+    } catch (err) {
+      console.warn('Waarschuwingspagina kon niet gerenderd worden:', err);
+    }
+    this.el.warning.hidden = false;
+    this.el.warningClose.focus();
+  }
+
+  closeWarning() {
+    this.el.warning.hidden = true;
   }
 }
 
@@ -562,6 +660,11 @@ function wire(book) {
   $('reader-close').addEventListener('click', () => book.closeReader());
   $('reader-next').addEventListener('click', () => book.next());
   $('reader-prev').addEventListener('click', () => book.prev());
+
+  $('warning-close').addEventListener('click', () => book.closeWarning());
+  book.el.warning.addEventListener('click', (e) => {
+    if (e.target === book.el.warning) book.closeWarning();
+  });
 
   document.querySelectorAll('[data-close]').forEach((btn) => {
     btn.addEventListener('click', () => closePanel(btn.dataset.close));
@@ -631,6 +734,7 @@ function wire(book) {
       if (e.key === 'Escape') e.target.blur();
       return;
     }
+    if (!book.el.warning.hidden && e.key !== 'Escape') return;
     switch (e.key) {
       case 'ArrowRight': case ' ': e.preventDefault(); book.next(); break;
       case 'ArrowLeft': e.preventDefault(); book.prev(); break;
@@ -642,7 +746,8 @@ function wire(book) {
       case '/':
         e.preventDefault(); openPanel('panel-search'); book.el.findInput.focus(); break;
       case 'Escape':
-        if (!book.el.reader.hidden) book.closeReader();
+        if (!book.el.warning.hidden) book.closeWarning();
+        else if (!book.el.reader.hidden) book.closeReader();
         else document.querySelectorAll('.panel').forEach((p) => (p.hidden = true));
         break;
     }

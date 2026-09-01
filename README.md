@@ -38,6 +38,14 @@ python3 -m http.server 8000
 
 Dan naar <http://localhost:8000>.
 
+Gebruik je `pdfSourceUrl` (zie §6B) om de PDF pas tijdens publicatie op te
+halen, dan staat er lokaal geen bestand in `pdf/` (het staat in `.gitignore`).
+Haal 'm dan zelf één keer op om lokaal te kunnen testen, bijv.:
+
+```bash
+curl -fL -o pdf/proefschrift-web.pdf "<pdfSourceUrl uit config.js>"
+```
+
 ---
 
 ## 3. GitHub Pages: twee routes
@@ -126,14 +134,28 @@ een bestand van tientallen megabytes.
 
 ## 6. De PDF elders hosten
 
-Wil je de PDF buiten de repo houden, zet dan een volledige URL in `pdfUrl`.
-De voorwaarde is dat die server **CORS toestaat** (`Access-Control-Allow-Origin`)
-én bij voorkeur range-requests. Zonder CORS-header weigert de browser het
-bestand en zie je de terugvalmelding met de downloadlink.
+Er zijn twee manieren om de PDF buiten de repo te houden.
 
-Werkt in de praktijk goed: Zenodo, een universitair repository met CORS,
-S3/R2 met een CORS-regel. Werkt vaak níét: SURFdrive- en Google Drive-links,
-die serveren een HTML-pagina in plaats van het bestand.
+**A. Rechtstreeks vanaf de client (`pdfUrl` = externe URL).** Zet een
+volledige URL in `pdfUrl`. De voorwaarde is dat die server **CORS toestaat**
+(`Access-Control-Allow-Origin`) én bij voorkeur range-requests. Zonder
+CORS-header weigert de browser het bestand en zie je de terugvalmelding met
+de downloadlink. Werkt in de praktijk goed: Zenodo, S3/R2 met een
+CORS-regel. Werkt vaak níét: SURFdrive- en Google Drive-links (serveren een
+HTML-pagina in plaats van het bestand), en **universitaire repositories
+sturen lang niet allemaal een CORS-header** — controleer dit vooraf, bijv.
+met `curl -sI -H "Origin: https://voorbeeld.nl" <url>` en kijk of
+`Access-Control-Allow-Origin` in de respons staat.
+
+**B. Ophalen tijdens de build (`pdfSourceUrl`).** Werkt altijd, ook zonder
+CORS: laat `pdfUrl` een lokaal pad zijn (zoals standaard) en zet de externe
+locatie in `pdfSourceUrl`. De workflow in `.github/workflows/deploy.yml`
+downloadt de PDF dan bij elke publicatie naar `pdfUrl`, vóórdat de site
+gepubliceerd wordt. De browser krijgt het bestand zo altijd same-origin
+binnen — geen CORS nodig — en de PDF zelf staat niet in je git-geschiedenis
+(zie `.gitignore`). Nadeel: elke publicatie downloadt het bestand opnieuw, en
+lokaal testen (`python3 -m http.server`) vereist dat je het bestand zelf één
+keer naar `pdf/` haalt, want dat gebeurt alleen tijdens de GitHub Actions-run.
 
 ---
 
@@ -227,6 +249,29 @@ verlaag dan `cacheSize` naar 12 en `nominalPageWidth` naar 480.
 
 **Geen harde kaft?** Zet `hardCover: false` als je PDF niet met een
 omslagpagina begint.
+
+**Voorblad van een repository (zoals bij TU Delft) niet in het boek?** Zet
+`warningPage` op het PDF-paginanummer dat je wilt overslaan (standaard `1`).
+Die pagina komt dan niet in de flipbook, maar wordt bij het openen getoond
+als een wegklikbare waarschuwing. Zet op `null` om uit te schakelen.
+
+**Een schutblad, erratum of ander los PDF-bestand ertussen schuiven?** Zet
+een item in `inserts` in `assets/js/config.js`:
+
+```js
+inserts: [
+  { at: 2, url: 'pdf/schutblad-voor.pdf' },
+  { at: -2, url: 'pdf/schutblad-achter.pdf' },
+],
+```
+
+`at` is de positie in de flipbook (niet in de PDF): positief telt vanaf het
+begin (`1` = nieuwe eerste pagina), negatief vanaf het eind (`-1` = na de
+huidige laatste pagina, `-2` = vóór de huidige laatste pagina — dus meteen
+vóór de achterkaft). Elk bestand wordt in zijn geheel ingevoegd, in eigen
+paginavolgorde; gebruik een PDF van één pagina voor een enkel schutblad. Dit
+is bijvoorbeeld hoe je een echt boek nabootst met een leeg schutblad na de
+voorkaft en vóór de achterkaft, zonder de PDF zelf te bewerken.
 
 ## 10. Toegankelijkheid
 

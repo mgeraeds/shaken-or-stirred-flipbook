@@ -430,6 +430,47 @@ svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
 }
 .fallback a { color: var(--foil-lift); }
 
+/* ── Waarschuwing ─────────────────────────────────────────────────────── */
+
+.warning {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center;
+  padding: var(--gap);
+  background: rgba(8, 13, 22, .72);
+}
+.warning[hidden] { display: none; }
+
+.warning__panel {
+  width: min(560px, 100%);
+  max-height: min(86vh, 800px);
+  display: flex; flex-direction: column;
+  background: var(--stage-deep);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgba(4, 8, 16, .55);
+  animation: slide .22s ease;
+}
+
+.warning__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.warning__head h2 {
+  margin: 0; font-family: var(--display); font-weight: 600; font-size: 17px;
+}
+.warning__close {
+  background: none; border: 0; color: var(--muted);
+  font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.warning__close:hover { color: var(--chalk); }
+
+.warning__scroll { flex: 1; overflow: auto; padding: 16px; text-align: center; }
+.warning__scroll canvas {
+  max-width: 100%; background: var(--paper);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+
 /* ── Rustiger bij voorkeur voor minder beweging ───────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
