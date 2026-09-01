@@ -49,8 +49,8 @@ export const CONFIG = {
   // Bestanden zijn lokale paden of https-URL's — zelfde CORS-regel als
   // pdfUrl. Laat leeg ([]) als je dit niet gebruikt.
   inserts: [
-    // { at: 2, url: 'pdf/cover-binnenkant-voor.pdf' },
-    // { at: -2, url: 'pdf/cover-binnenkant-achter.pdf' },
+    { at: 2, url: 'pdf/cover-binnenkant-voor.pdf' },
+    { at: -2, url: 'pdf/cover-binnenkant-achter.pdf' },
   ],
 
   // Duur van de omslaganimatie in milliseconden.
