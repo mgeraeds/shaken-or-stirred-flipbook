@@ -17,7 +17,7 @@ export const CONFIG = {
   // flipbook alsnog same-origin (geen CORS nodig, want de bron-server hoeft
   // dan zelf geen CORS-header te sturen). Zet op '' om uit te schakelen en
   // pdfUrl direct te gebruiken (lokaal bestand, of externe URL mét CORS).
-  pdfSourceUrl: 'https://repository.tudelft.nl/file/File_e52e86ad-3e3c-4916-bad5-c9dbdcd22f0a',
+  pdfSourceUrl: 'https://repository.tudelft.nl/file/File_9af07e9e-3f73-4aee-8af4-a9e33af2eb42',
 
   // Bestandsnaam die de bezoeker krijgt bij 'PDF' (download).
   downloadName: 'proefschrift-web.pdf',
