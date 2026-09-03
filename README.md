@@ -273,6 +273,14 @@ paginavolgorde; gebruik een PDF van één pagina voor een enkel schutblad. Dit
 is bijvoorbeeld hoe je een echt boek nabootst met een leeg schutblad na de
 voorkaft en vóór de achterkaft, zonder de PDF zelf te bewerken.
 
+Komt er ooit een nieuwe versie van `pdfUrl`/`pdfSourceUrl` die de schutbladen
+al zelf bevat (bijv. een latere, complete export), dan wil je `inserts` niet
+nog eens toepassen — dat zou ze dubbel tonen. Zet daarvoor
+`insertsSkipIfPdfPagesAtLeast` op het aantal pagina's dat die complete versie
+heeft (bijv. `260`): zodra de opgehaalde PDF minstens zoveel pagina's telt,
+slaat de flipbook `inserts` automatisch over. Zet op `null` om deze check
+uit te schakelen en `inserts` altijd toe te passen.
+
 ## 10. Toegankelijkheid
 
 Een canvas-flipbook heeft geen selecteerbare tekstlaag. Dat is een reële

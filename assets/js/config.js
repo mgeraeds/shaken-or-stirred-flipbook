@@ -53,6 +53,13 @@ export const CONFIG = {
     { at: -2, url: 'pdf/cover-binnenkant-achter.pdf' },
   ],
 
+  // Als de opgehaalde PDF (pdfUrl/pdfSourceUrl) zelf al minstens dit aantal
+  // pagina's bevat, wordt aangenomen dat de schutbladen al in dat bestand
+  // zitten (bijv. een nieuwere, complete export) en worden 'inserts'
+  // overgeslagen — zo voeg je ze niet per ongeluk dubbel toe. Zet op null
+  // om deze check uit te schakelen en 'inserts' altijd toe te passen.
+  insertsSkipIfPdfPagesAtLeast: 260,
+
   // Duur van de omslaganimatie in milliseconden.
   flipDuration: 750,
 

@@ -101,7 +101,11 @@ class Flipbook {
       ? CONFIG.warningPage
       : 0;
 
-    const inserts = await this.loadInserts();
+    // Bevat de opgehaalde PDF zelf al genoeg pagina's, dan zitten de
+    // schutbladen er vermoedelijk al in — inserts dan niet nog eens toevoegen.
+    const skipInserts = CONFIG.insertsSkipIfPdfPagesAtLeast != null
+      && this.pdf.numPages >= CONFIG.insertsSkipIfPdfPagesAtLeast;
+    const inserts = skipInserts ? [] : await this.loadInserts();
     this.pageMap = this.buildPageMap(inserts);
     this.total = this.pageMap.length;
 
